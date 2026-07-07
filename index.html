@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AETHER — Sinais técnicos M5 para Forex e Opções, direto no Telegram</title>
+<meta name="description" content="Sinais técnicos no fechamento de cada candle M5, aprovados por 9 confluências de uma estratégia proprietária. Entrega via Telegram. Caráter informativo — não é recomendação de investimento." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <a class="nav__brand" href="#top">AETHER<span class="nav__dot">.</span></a>
+  <div class="nav__links">
+    <a href="#metodo">Método</a>
+    <a href="#beneficios">Benefícios</a>
+    <a href="#planos">Planos</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <a class="btn btn--sm btn--primary" href="#cta-final">Começar agora</a>
+</nav>
+
+<!-- ============ HERO — montagem por partículas, controlada pelo scroll ============ -->
+<section class="hero" id="top">
+  <div class="hero__sticky">
+    <canvas id="heroCanvas" aria-hidden="true"></canvas>
+    <div class="hero__copy" id="heroCopy">
+      <p class="eyebrow eyebrow--light">Sinais técnicos · Forex &amp; Opções · Timeframe M5</p>
+      <h1 class="hero__title">Menos ruído.<br />Mais critério.</h1>
+      <p class="hero__sub">O AETHER analisa cada candle de 5 minutos contra as 9 confluências da nossa estratégia proprietária — e só envia um alerta ao seu Telegram quando todas concordam.</p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="#cta-final">Começar agora</a>
+        <a class="btn btn--ghost" href="#como-funciona">Ver como funciona</a>
+      </div>
+    </div>
+    <p class="hero__caption" id="heroCaption">Cada sinal nasce de 9 condições que concordam — nunca de um palpite.</p>
+    <div class="hero__scrollhint" id="heroHint"><span></span>Role para montar o painel</div>
+  </div>
+</section>
+
+<div class="fade-band" aria-hidden="true"></div>
+
+<!-- ============ FAIXA DE PARES ============ -->
+<section class="pairs">
+  <p class="pairs__label">Critérios ajustados individualmente para cada par</p>
+  <div class="pairs__marquee" aria-hidden="true">
+    <div class="pairs__track">
+      <span>EUR/USD</span><span>GBP/USD</span><span>USD/JPY</span><span>AUD/USD</span><span>USD/CAD</span><span>NZD/USD</span><span>EUR/JPY</span><span>GBP/JPY</span><span>USD/CHF</span><span>EUR/GBP</span>
+      <span>EUR/USD</span><span>GBP/USD</span><span>USD/JPY</span><span>AUD/USD</span><span>USD/CAD</span><span>NZD/USD</span><span>EUR/JPY</span><span>GBP/JPY</span><span>USD/CHF</span><span>EUR/GBP</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMO FUNCIONA ============ -->
+<section class="section" id="como-funciona">
+  <div class="wrap">
+    <p class="eyebrow fx">Como funciona</p>
+    <h2 class="h2 fx">Três passos. Nenhum atalho.</h2>
+    <div class="steps">
+      <article class="step fx">
+        <span class="step__num">01</span>
+        <h3>O candle M5 fecha</h3>
+        <p>A cada fechamento de candle de 5 minutos, o AETHER testa o mercado contra as 9 confluências da estratégia — com parâmetros próprios para o par analisado.</p>
+      </article>
+      <article class="step fx">
+        <span class="step__num">02</span>
+        <h3>As 9 concordam — ou nada sai</h3>
+        <p>Se qualquer confluência discordar, nada é enviado. Um sinal só existe quando as nove apontam na mesma direção, no mesmo candle.</p>
+      </article>
+      <article class="step fx">
+        <span class="step__num">03</span>
+        <h3>Você recebe no Telegram</h3>
+        <p>Par, direção e horário do candle chegam ao seu canal no fechamento do M5. Sem precisar vigiar o gráfico, de onde você estiver.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ O MÉTODO — seção fixa sobre o "clipe 2" ============ -->
+<section class="signal" id="metodo">
+  <div class="signal__sticky">
+    <canvas id="signalCanvas" aria-hidden="true"></canvas>
+    <div class="signal__overlay">
+      <p class="eyebrow eyebrow--light">O método</p>
+      <div class="signal__words">
+        <div class="signal__word" data-idx="0">
+          <h2>Filtrar<span>.</span></h2>
+          <p>Cada candle é testado contra as 9 confluências da estratégia. O que é fraco, o AETHER descarta em silêncio.</p>
+        </div>
+        <div class="signal__word" data-idx="1">
+          <h2>Confirmar<span>.</span></h2>
+          <p>Um alerta só existe quando as 9 confluências apontam na mesma direção — reduzindo ruído e sinais frágeis.</p>
+        </div>
+        <div class="signal__word" data-idx="2">
+          <h2>Entregar<span>.</span></h2>
+          <p>Par, direção e horário do candle, no seu Telegram, no fechamento do M5. Sem excesso. Sem repetição.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BENEFÍCIOS ============ -->
+<section class="section" id="beneficios">
+  <div class="wrap">
+    <p class="eyebrow fx">Por que o AETHER</p>
+    <h2 class="h2 fx">Disciplina automatizada,<br />do filtro à entrega.</h2>
+    <div class="cards">
+      <article class="card fx">
+        <div class="card__icon">M5</div>
+        <h3>Velocidade no M5</h3>
+        <p>Sinais enviados no fechamento de cada candle de 5 minutos — agilidade para o curto prazo, sem que você precise ficar preso ao gráfico.</p>
+      </article>
+      <article class="card fx">
+        <div class="card__icon">9</div>
+        <h3>9 confluências</h3>
+        <p>Nove condições técnicas precisam concordar entre si, no mesmo candle. Se uma discorda, o sinal não sai.</p>
+      </article>
+      <article class="card fx">
+        <div class="card__icon">⇄</div>
+        <h3>Critério por par</h3>
+        <p>Cada ativo se comporta de um jeito. Os parâmetros do AETHER são ajustados individualmente, respeitando o perfil de cada par.</p>
+      </article>
+      <article class="card fx">
+        <div class="card__icon">‖</div>
+        <h3>Pausa em notícias</h3>
+        <p>Antes e depois de eventos econômicos de alto impacto, o envio é suspenso automaticamente — longe da volatilidade imprevisível.</p>
+      </article>
+      <article class="card fx">
+        <div class="card__icon">1×</div>
+        <h3>Anti-redundância</h3>
+        <p>Um movimento, um alerta. O filtro anti-redundância evita sinais repetidos para o mesmo deslocamento do preço.</p>
+      </article>
+      <article class="card fx">
+        <div class="card__icon">✈</div>
+        <h3>Direto no Telegram</h3>
+        <p>Par, direção e horário do candle no seu celular ou desktop — acessível de qualquer lugar, sem plataforma extra para abrir.</p>
+      </article>
+      <article class="card fx card--wide">
+        <div class="card__icon">◷</div>
+        <h3>Janela configurável</h3>
+        <p>Defina os horários em que deseja receber sinais, alinhados ao seu fuso. Fora da janela, o AETHER permanece em silêncio.</p>
+      </article>
+      <article class="card fx card--wide card--secret">
+        <div class="card__icon">🔒</div>
+        <h3>Estratégia proprietária</h3>
+        <p>As 9 confluências exatas são mantidas em sigilo. Você não precisa conhecê-las para se beneficiar da disciplina que elas impõem — o resultado chega filtrado no seu Telegram.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROTEÇÃO EM NOTÍCIAS ============ -->
+<section class="news">
+  <div class="wrap">
+    <p class="eyebrow eyebrow--light fx">Proteção em eventos econômicos</p>
+    <h2 class="h2 fx">Quando o mercado fica imprevisível,<br />o AETHER fica em silêncio.</h2>
+    <p class="news__body fx">Divulgações de alto impacto — decisões de juros, payroll, inflação — distorcem os padrões técnicos por minutos que podem custar caro. O AETHER consulta o calendário econômico e suspende os sinais antes do evento, retomando apenas quando a janela de volatilidade passa.</p>
+    <div class="timeline fx" role="img" aria-label="Linha do tempo mostrando sinais ativos, pausa automática durante notícia de alto impacto e retomada">
+      <div class="timeline__seg timeline__seg--on"><em>Sinais ativos</em></div>
+      <div class="timeline__seg timeline__seg--off"><i>Notícia de alto impacto · 15:30</i><em>Pausa automática</em></div>
+      <div class="timeline__seg timeline__seg--on"><em>Retomada</em></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MÉTRICAS ============ -->
+<section class="section metrics">
+  <div class="wrap">
+    <div class="metrics__grid">
+      <div class="metric fx">
+        <strong><span class="counter" data-target="9" data-from="0">0</span></strong>
+        <p>confluências verificadas em cada sinal</p>
+      </div>
+      <div class="metric fx">
+        <strong><span class="counter" data-target="288" data-from="0">0</span></strong>
+        <p>candles M5 avaliados por dia, em cada par</p>
+      </div>
+      <div class="metric fx">
+        <strong><span class="counter" data-target="0" data-from="24">24</span></strong>
+        <p>sinais enviados durante notícias de alto impacto</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRODUTO / MOCKUP ============ -->
+<section class="section product">
+  <div class="wrap">
+    <p class="eyebrow fx">O sinal, na prática</p>
+    <h2 class="h2 fx">Do filtro ao seu bolso<br />em um fechamento de candle.</h2>
+    <div class="product__stage fx">
+      <div class="browser">
+        <div class="browser__bar">
+          <span class="browser__dots"><i></i><i></i><i></i></span>
+          <span class="browser__url">app.aether.trade/painel</span>
+        </div>
+        <div class="browser__body">
+          <aside class="dash__side">
+            <div class="dash__stat"><small>Pares ativos</small><b>8</b></div>
+            <div class="dash__stat"><small>Janela</small><b>08h–17h</b></div>
+            <div class="dash__stat"><small>Notícias hoje</small><b>2 pausas</b></div>
+            <div class="dash__stat"><small>Status</small><b class="ok">Operando</b></div>
+          </aside>
+          <div class="dash__main">
+            <svg viewBox="0 0 560 220" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#7C5CFF" stop-opacity=".28"/>
+                  <stop offset="100%" stop-color="#7C5CFF" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <polyline fill="none" stroke="#7C5CFF" stroke-width="2.5"
+                points="0,190 40,178 80,182 120,160 160,166 200,140 240,148 280,122 320,130 360,104 400,112 440,86 480,92 520,66 560,58"/>
+              <polygon fill="url(#gArea)"
+                points="0,190 40,178 80,182 120,160 160,166 200,140 240,148 280,122 320,130 360,104 400,112 440,86 480,92 520,66 560,58 560,220 0,220"/>
+            </svg>
+            <table class="dash__table">
+              <tbody>
+                <tr><td>EUR/USD</td><td class="up">Compra</td><td>14:35</td><td>M5</td></tr>
+                <tr><td>GBP/JPY</td><td class="down">Venda</td><td>13:20</td><td>M5</td></tr>
+                <tr><td>USD/CAD</td><td class="up">Compra</td><td>11:05</td><td>M5</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="tg">
+        <div class="tg__head"><span class="tg__avatar">A</span><div><b>AETHER Sinais</b><small>canal · Telegram</small></div></div>
+        <div class="tg__msg">
+          <b>EUR/USD · Compra</b>
+          <span>Candle 14:35 (M5) · 9/9 confluências alinhadas</span>
+          <time>14:35</time>
+        </div>
+        <div class="tg__msg tg__msg--muted">
+          <b>Pausa programada</b>
+          <span>Evento de alto impacto (USD) às 15:30 — sinais suspensos das 15:10 às 15:50</span>
+          <time>15:05</time>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLANOS ============ -->
+<section class="section pricing" id="planos">
+  <div class="wrap">
+    <p class="eyebrow fx">Planos</p>
+    <h2 class="h2 fx">Escolha o seu ritmo.</h2>
+    <p class="pricing__lead fx">Acesso completo em todos os planos. A única diferença é quanto você paga por mês.</p>
+    <div class="tiers fx" id="tiers">
+      <article class="tier">
+        <h3>Mensal</h3>
+        <p class="tier__desc">Flexibilidade total, sem compromisso.</p>
+        <p class="tier__price"><sup>R$</sup><span class="tier__amount">197</span><small>/mês</small></p>
+        <p class="tier__note">cobrança mensal, cancele quando quiser</p>
+        <ul>
+          <li>Sinais aprovados pelas 9 confluências</li>
+          <li>Todos os pares cobertos</li>
+          <li>Critérios ajustados por par</li>
+          <li>Janela de operação configurável</li>
+          <li>Filtro anti-redundância</li>
+          <li>Pausa automática em notícias</li>
+          <li>Suporte prioritário</li>
+        </ul>
+        <a class="btn btn--outline" href="#cta-final">Assinar Mensal</a>
+      </article>
+      <article class="tier tier--hot">
+        <span class="tier__badge">Melhor valor · economize R$ 867</span>
+        <h3>Anual</h3>
+        <p class="tier__desc">O mesmo AETHER, pelo menor preço por mês.</p>
+        <p class="tier__price"><s class="tier__was">R$ 197</s><sup>R$</sup><span class="tier__amount">125</span><small>/mês</small></p>
+        <p class="tier__note">R$ 1.497 cobrados anualmente · 37% de desconto</p>
+        <ul>
+          <li>Sinais aprovados pelas 9 confluências</li>
+          <li>Todos os pares cobertos</li>
+          <li>Critérios ajustados por par</li>
+          <li>Janela de operação configurável</li>
+          <li>Filtro anti-redundância</li>
+          <li>Pausa automática em notícias</li>
+          <li>Suporte prioritário</li>
+        </ul>
+        <a class="btn btn--primary" href="#cta-final">Assinar Anual</a>
+      </article>
+      <article class="tier">
+        <h3>Trimestral</h3>
+        <p class="tier__desc">Um passo além da flexibilidade.</p>
+        <p class="tier__price"><sup>R$</sup><span class="tier__amount">179</span><small>/mês</small></p>
+        <p class="tier__note">R$ 537 cobrados a cada 3 meses · 9% de desconto</p>
+        <ul>
+          <li>Sinais aprovados pelas 9 confluências</li>
+          <li>Todos os pares cobertos</li>
+          <li>Critérios ajustados por par</li>
+          <li>Janela de operação configurável</li>
+          <li>Filtro anti-redundância</li>
+          <li>Pausa automática em notícias</li>
+          <li>Suporte prioritário</li>
+        </ul>
+        <a class="btn btn--outline" href="#cta-final">Assinar Trimestral</a>
+      </article>
+    </div>
+    <p class="pricing__foot fx">Todos os planos incluem exatamente os mesmos recursos e a mesma disciplina. Nenhum plano promete resultado.</p>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section faq" id="faq">
+  <div class="wrap wrap--narrow">
+    <p class="eyebrow fx">Perguntas frequentes</p>
+    <h2 class="h2 fx">Transparência antes de tudo.</h2>
+    <div class="faq__list fx" id="faqList">
+      <div class="faq__item">
+        <button class="faq__q" type="button">Isso é recomendação de investimento?<i></i></button>
+        <div class="faq__a"><p>Não. Os sinais são gerados por análise técnica automatizada e têm caráter exclusivamente informativo. Eles organizam informação com critérios objetivos — a decisão de operar, o gerenciamento de risco e a responsabilidade pelos resultados são sempre do usuário.</p></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button">Quais são as 9 confluências?<i></i></button>
+        <div class="faq__a"><p>Elas são a parte proprietária do AETHER e não são divulgadas. O que garantimos é o comportamento: um sinal só é enviado quando as 9 concordam no mesmo candle — e, quando isso não acontece, o silêncio também é uma resposta.</p></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button">Os sinais garantem resultado?<i></i></button>
+        <div class="faq__a"><p>Não. Nenhum sistema de análise técnica elimina o risco de perda. O que o AETHER oferece é disciplina: 9 confluências obrigatórias, critérios por par e silêncio quando o mercado não dá motivo.</p></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button">Como os sinais chegam até mim?<i></i></button>
+        <div class="faq__a"><p>Pelo Telegram, no fechamento do candle M5. Cada mensagem informa o par, a direção e o horário do candle — simples de ler no celular ou no desktop, de onde você estiver.</p></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button">Por que há períodos sem nenhum sinal?<i></i></button>
+        <div class="faq__a"><p>Porque o silêncio faz parte do método. Se as 9 confluências não concordam, se há notícia de alto impacto por perto ou se o movimento já foi sinalizado, nada é enviado. Menos alertas, mais relevância.</p></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button">O que acontece durante notícias importantes?<i></i></button>
+        <div class="faq__a"><p>O AETHER consulta o calendário econômico e suspende automaticamente os sinais antes e depois de eventos de alto impacto, retomando quando a janela de volatilidade imprevisível passa.</p></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button">Posso ajustar os horários em que recebo sinais?<i></i></button>
+        <div class="faq__a"><p>Sim. A janela de operação é configurável e alinhada ao seu fuso horário. Fora dela, nenhum alerta é enviado.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA FINAL — "a calma" ============ -->
+<section class="cta" id="cta-final">
+  <div class="cta__glow" aria-hidden="true"></div>
+  <div class="wrap wrap--narrow cta__inner">
+    <p class="eyebrow fx">Tudo sob controle</p>
+    <h2 class="cta__title fx">Critério primeiro.<br />Sempre.</h2>
+    <p class="cta__sub fx">Receba apenas os sinais aprovados pelas 9 confluências — no fechamento do candle, no seu Telegram.</p>
+    <div class="cta__actions fx">
+      <a class="btn btn--primary btn--lg" href="#">Entrar no canal do Telegram</a>
+      <a class="btn btn--ghost-dark" href="#planos">Ver planos</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RODAPÉ + AVISO DE RISCO ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__risk" role="note">
+      <strong>Aviso de risco</strong>
+      <p>Os sinais são gerados por meio de análise técnica automatizada e têm caráter exclusivamente informativo. Não constituem recomendação de investimento nem garantia de resultados. A negociação em Forex e Opções envolve risco de perda. Opere com responsabilidade.</p>
+    </div>
+    <div class="footer__row">
+      <span class="footer__brand">AETHER<span>.</span></span>
+      <nav class="footer__links">
+        <a href="#metodo">Método</a>
+        <a href="#planos">Planos</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <span class="footer__copy">© 2026 AETHER · Produto de informação técnica</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

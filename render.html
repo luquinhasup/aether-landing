@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>AETHER — Render do reel (MP4)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js"></script>
+<style>
+  body { background: #111; color: #ddd; font-family: monospace; padding: 20px; }
+  canvas { width: 270px; height: 480px; border: 1px solid #333; display: block; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div id="log">preparando…</div>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+"use strict";
+const W = 1080, H = 1920, FPS = 30, DUR = 56;
+const V = "#7c5cff", VD = "#5b3df5", VB = "#8b6bff", INK = "#f5f3fc", MUT = "#b6b2c9", DIM = "#8d88a6";
+const cv = document.getElementById("c");
+const ctx = cv.getContext("2d");
+const log = (m) => { document.getElementById("log").textContent = m; };
+window.__renderStatus = { state: "init", frame: 0, total: DUR * FPS };
+
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+// aparição de um item (fade + subida), começando em `at`
+const ia = (t, at, d = 0.6) => smooth((t - at) / d);
+
+/* ---------- RNG determinístico ---------- */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let x = Math.imul(a ^ (a >>> 15), 1 | a);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rnd = mulberry32(42);
+// bandas de candles em parallax
+function makeCandles(n) {
+  const arr = [];
+  let base = 0.5;
+  for (let i = 0; i < n; i++) {
+    const o = base;
+    base = clamp(base + (rnd() - 0.485) * 0.16, 0.12, 0.88);
+    const c = base;
+    const hi = Math.min(Math.max(o, c) + rnd() * 0.08, 0.98);
+    const lo = Math.max(Math.min(o, c) - rnd() * 0.08, 0.02);
+    arr.push({ o, c, hi, lo });
+  }
+  return arr;
+}
+const bands = [
+  { s: makeCandles(70), y: 400, amp: 480, cw: 46, sp: 46, a: 0.18 },
+  { s: makeCandles(70), y: 1130, amp: 380, cw: 34, sp: 28, a: 0.1 },
+  { s: makeCandles(70), y: 1620, amp: 430, cw: 58, sp: 74, a: 0.26 },
+];
+function drawBands(t, boost) {
+  for (const b of bands) {
+    const period = b.s.length * b.cw;
+    const off = t * b.sp;
+    for (let i = 0; i < b.s.length; i++) {
+      let x = (((i * b.cw - off) % period) + period) % period - b.cw;
+      if (x > W + b.cw) continue;
+      const cd = b.s[i];
+      const yO = b.y + (0.5 - cd.o) * b.amp;
+      const yC = b.y + (0.5 - cd.c) * b.amp;
+      const yH = b.y + (0.5 - cd.hi) * b.amp;
+      const yL = b.y + (0.5 - cd.lo) * b.amp;
+      const up = cd.c >= cd.o;
+      const al = Math.min(b.a * boost, 0.5);
+      ctx.strokeStyle = up ? `rgba(139,107,255,${al})` : `rgba(236,233,248,${al * 0.5})`;
+      ctx.fillStyle = up ? `rgba(139,107,255,${al})` : `rgba(160,156,180,${al * 0.65})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
+      const bw = b.cw * 0.55;
+      ctx.fillRect(x - bw / 2, Math.min(yO, yC), bw, Math.max(Math.abs(yC - yO), 3));
+    }
+  }
+}
+const parts = [];
+for (let i = 0; i < 180; i++) parts.push({
+  x: rnd() * W, y: rnd() * H,
+  vx: (rnd() - 0.5) * 14, vy: (rnd() - 0.5) * 14,
+  v: rnd() < 0.28, s: rnd() < 0.12 ? 3.4 : 2,
+});
+
+/* ---------- helpers de desenho ---------- */
+function font(weight, size, fam = "Space Grotesk") {
+  ctx.font = `${weight} ${size}px "${fam}"`;
+}
+function txt(str, x, y, { w = 400, s = 40, fam = "Inter", c = INK, a = 1, ls = "0px", align = "center" } = {}) {
+  if (a <= 0.004) return;
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.letterSpacing = ls;
+  ctx.textAlign = align;
+  ctx.textBaseline = "middle";
+  font(w, s, fam);
+  ctx.fillStyle = c;
+  ctx.fillText(str, x, y);
+  ctx.restore();
+}
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+
+/* ---------- fundo ---------- */
+function bg(t) {
+  ctx.fillStyle = "#060509";
+  ctx.fillRect(0, 0, W, H);
+  let g = ctx.createRadialGradient(540, 2210, 0, 540, 2210, 900);
+  g.addColorStop(0, "rgba(124,92,255,0.18)"); g.addColorStop(1, "rgba(124,92,255,0)");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  g = ctx.createRadialGradient(918, -96, 0, 918, -96, 700);
+  g.addColorStop(0, "rgba(124,92,255,0.09)"); g.addColorStop(1, "rgba(124,92,255,0)");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  drawBands(t, t < 12 ? 1.7 : 1);
+  for (const p of parts) {
+    const x = ((p.x + p.vx * t) % W + W) % W;
+    const y = ((p.y + p.vy * t) % H + H) % H;
+    ctx.fillStyle = p.v ? "rgba(139,107,255,0.55)" : "rgba(236,233,248,0.3)";
+    ctx.fillRect(x, y, p.s, p.s);
+  }
+  ctx.restore();
+
+  // marca no topo
+  txt("AETHER.", 540, 88, { w: 700, s: 34, c: "rgba(245,243,252,0.55)", ls: "8px" });
+}
+
+/* ---------- alpha/offset de cena (crossfade) ---------- */
+function sceneK(t, from, to, hold = false) {
+  const kin = smooth((t - from) / 0.65);
+  const kout = hold ? 0 : smooth((t - (to - 0.5)) / 0.5);
+  return { a: kin * (1 - kout), dy: (1 - kin) * 46 - kout * 26 };
+}
+
+/* ---------- cenas ---------- */
+function s1(t) {
+  const { a, dy } = sceneK(t, 0, 5.6);
+  if (a <= 0) return;
+  ctx.save(); ctx.translate(0, dy);
+  const k1 = ia(t, 0.2);
+  txt("Quantos sinais", 540, 810 + (1 - k1) * 34, { w: 700, s: 108, a: a * k1 });
+  txt("você recebeu hoje?", 540, 925 + (1 - k1) * 34, { w: 700, s: 108, a: a * k1 });
+  const k2 = ia(t, 2.6);
+  txt("E quantos realmente valiam a sua atenção?", 540, 1080 + (1 - k2) * 34, { fam: "Inter", s: 42, c: MUT, a: a * k2 });
+  ctx.restore();
+}
+
+function s2(t) {
+  const { a, dy } = sceneK(t, 5.6, 12);
+  if (a <= 0) return;
+  ctx.save(); ctx.translate(0, dy);
+  const k1 = ia(t, 5.9);
+  txt("A maioria", 540, 830 + (1 - k1) * 34, { w: 700, s: 118, a: a * k1 });
+  // "é ruído." com destaque
+  ctx.save();
+  ctx.globalAlpha = a * k1;
+  font(700, 118); ctx.textBaseline = "middle";
+  const wE = ctx.measureText("é ").width, wR = ctx.measureText("ruído").width, wDot = ctx.measureText(".").width;
+  let x = 540 - (wE + wR + wDot) / 2;
+  ctx.textAlign = "left";
+  ctx.fillStyle = INK; ctx.fillText("é ", x, 955 + (1 - k1) * 34); x += wE;
+  ctx.fillStyle = V; ctx.fillText("ruído", x, 955 + (1 - k1) * 34); x += wR;
+  ctx.fillStyle = INK; ctx.fillText(".", x, 955 + (1 - k1) * 34);
+  ctx.restore();
+  const k2 = ia(t, 8.2);
+  txt("Sinal demais é o mesmo que sinal nenhum.", 540, 1110 + (1 - k2) * 34, { fam: "Inter", s: 42, c: MUT, a: a * k2 });
+  ctx.restore();
+}
+
+function lockIcon(x, y, s, c) {
+  ctx.save();
+  ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineWidth = s * 0.16;
+  ctx.beginPath(); ctx.arc(x, y - s * 0.16, s * 0.32, Math.PI, 0); ctx.stroke();
+  rr(x - s * 0.5, y - s * 0.16, s, s * 0.78, s * 0.16); ctx.fill();
+  ctx.restore();
+}
+
+function s3(t) {
+  const { a, dy } = sceneK(t, 12, 24);
+  if (a <= 0) return;
+  ctx.save(); ctx.translate(0, dy);
+  const k1 = ia(t, 12.3);
+  // logo
+  ctx.save();
+  ctx.globalAlpha = a * k1;
+  font(700, 140); ctx.textBaseline = "middle"; ctx.letterSpacing = "14px";
+  const wl = ctx.measureText("AETHER").width, wd = ctx.measureText(".").width;
+  let x = 540 - (wl + wd) / 2;
+  ctx.textAlign = "left";
+  ctx.fillStyle = INK; ctx.fillText("AETHER", x, 560 + (1 - k1) * 34);
+  ctx.fillStyle = V; ctx.fillText(".", x + wl, 560 + (1 - k1) * 34);
+  ctx.restore();
+  const k2 = ia(t, 13.4);
+  txt("Sinais M5 para Forex e Opções,", 540, 700 + (1 - k2) * 34, { fam: "Inter", s: 42, c: MUT, a: a * k2 });
+  txt("construídos sobre 9 confluências.", 540, 760 + (1 - k2) * 34, { fam: "Inter", s: 42, c: MUT, a: a * k2 });
+
+  // grade 3×3 de confluências numeradas
+  const cell = 128, step = cell + 30;
+  const gx0 = 540 - step, gy0 = 900;
+  for (let i = 0; i < 9; i++) {
+    const k = ia(t, 15 + i * 0.3, 0.4);
+    if (k <= 0) continue;
+    const cx = gx0 + (i % 3) * step;
+    const cy = gy0 + Math.floor(i / 3) * step;
+    const sc = 0.6 + 0.4 * smooth(k);
+    const settled = t > 18.5 ? 0.5 + 0.5 * Math.abs(Math.sin(t * 2 + i)) : 1;
+    ctx.save();
+    ctx.globalAlpha = a * Math.min(k * 1.5, 1);
+    ctx.translate(cx, cy); ctx.scale(sc, sc);
+    rr(-cell / 2, -cell / 2, cell, cell, 28);
+    ctx.fillStyle = "rgba(124,92,255,0.1)"; ctx.fill();
+    ctx.strokeStyle = `rgba(124,92,255,${0.3 + 0.4 * settled})`; ctx.lineWidth = 2.5; ctx.stroke();
+    font(600, 40); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(245,243,252,0.92)";
+    ctx.fillText("0" + (i + 1), 0, 2);
+    ctx.restore();
+  }
+
+  // frase + selo SECRETO
+  const k3 = ia(t, 18.4);
+  ctx.save();
+  ctx.globalAlpha = a * k3;
+  font(600, 42, "Inter"); ctx.textBaseline = "middle";
+  const pA = "Um sinal só sai quando ", pB = "as 9 concordam", pC = ".";
+  const wA = ctx.measureText(pA).width, wB = ctx.measureText(pB).width, wC = ctx.measureText(pC).width;
+  let lx = 540 - (wA + wB + wC) / 2;
+  const ly = 1430 + (1 - k3) * 34;
+  ctx.textAlign = "left";
+  ctx.fillStyle = MUT; ctx.fillText(pA, lx, ly); lx += wA;
+  ctx.fillStyle = V; ctx.fillText(pB, lx, ly); lx += wB;
+  ctx.fillStyle = MUT; ctx.fillText(pC, lx, ly);
+  ctx.restore();
+
+  const k4 = ia(t, 19.8);
+  if (k4 > 0) {
+    ctx.save();
+    ctx.globalAlpha = a * k4;
+    ctx.translate(540, 1550 + (1 - k4) * 30);
+    font(700, 40); ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.letterSpacing = "6px";
+    const tw = ctx.measureText("SECRETO").width;
+    const iconW = 44, gapI = 24, padX = 56, hp = 104;
+    const wp = padX * 2 + iconW + gapI + tw;
+    const g = ctx.createLinearGradient(-wp / 2, -hp / 2, wp / 2, hp / 2);
+    g.addColorStop(0, V); g.addColorStop(1, VD);
+    ctx.shadowColor = "rgba(124,92,255,0.6)"; ctx.shadowBlur = 50;
+    rr(-wp / 2, -hp / 2, wp, hp, hp / 2);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.shadowBlur = 0;
+    lockIcon(-wp / 2 + padX + iconW / 2, 0, 40, "#fff");
+    ctx.fillStyle = "#fff"; ctx.fillText("SECRETO", -wp / 2 + padX + iconW + gapI, 3);
+    ctx.restore();
+  }
+  const k5 = ia(t, 21.0);
+  txt("estratégia proprietária", 540, 1650 + (1 - k5) * 20, { fam: "Inter", s: 28, c: DIM, a: a * k5 });
+
+  // anel envolvendo a grade
+  if (t > 19.4 && t < 24) {
+    const kk = smooth((t - 19.4) / 0.8);
+    ctx.save();
+    ctx.globalAlpha = a * kk * 0.45;
+    ctx.strokeStyle = VB; ctx.lineWidth = 3;
+    ctx.shadowColor = VB; ctx.shadowBlur = 40;
+    ctx.beginPath();
+    ctx.arc(540, 1058, 345 * (1 + Math.sin(t * 4) * 0.04), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function s4(t) {
+  const { a, dy } = sceneK(t, 24, 33);
+  if (a <= 0) return;
+  ctx.save(); ctx.translate(0, dy);
+  const k1 = ia(t, 24.3);
+  if (k1 > 0) {
+    ctx.save();
+    ctx.globalAlpha = a * k1;
+    ctx.translate(0, (1 - k1) * 34);
+    const cw = 860, cx0 = 540 - cw / 2, cy0 = 620, ch = 470;
+    rr(cx0, cy0, cw, ch, 44);
+    ctx.fillStyle = "rgba(255,255,255,0.07)"; ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.14)"; ctx.lineWidth = 2; ctx.stroke();
+    // avatar
+    const ax = cx0 + 44 + 48, ay = cy0 + 44 + 48;
+    const ag = ctx.createLinearGradient(ax - 48, ay - 48, ax + 48, ay + 48);
+    ag.addColorStop(0, V); ag.addColorStop(1, VD);
+    ctx.beginPath(); ctx.arc(ax, ay, 48, 0, Math.PI * 2); ctx.fillStyle = ag; ctx.fill();
+    txt("A", ax, ay + 2, { w: 700, s: 48, a: a * k1 });
+    txt("AETHER Sinais", ax + 76, ay - 16, { w: 600, s: 42, align: "left", a: a * k1 });
+    txt("canal · Telegram", ax + 76, ay + 34, { fam: "Inter", s: 30, c: MUT, align: "left", a: a * k1 });
+    // mensagem
+    const mx = cx0 + 40, my = cy0 + 190, mw = cw - 80, mh = 230;
+    rr(mx, my, mw, mh, 30);
+    ctx.fillStyle = "rgba(6,5,9,0.72)"; ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 2; ctx.stroke();
+    txt("EUR/USD · Compra", mx + 38, my + 62, { w: 600, s: 44, align: "left", a: a * k1 });
+    txt("Candle 14:35 (M5) · condições alinhadas", mx + 38, my + 130, { fam: "Inter", s: 32, c: MUT, align: "left", a: a * k1 });
+    txt("14:35", mx + mw - 30, my + mh - 36, { fam: "Inter", s: 26, c: DIM, align: "right", a: a * k1 });
+    ctx.restore();
+  }
+  const k2 = ia(t, 26.5);
+  txt("No fechamento do candle.", 540, 1240 + (1 - k2) * 34, { fam: "Inter", s: 42, c: MUT, a: a * k2 });
+  txt("Direto no seu Telegram.", 540, 1300 + (1 - k2) * 34, { fam: "Inter", s: 42, c: MUT, a: a * k2 });
+  ctx.restore();
+}
+
+function s5(t) {
+  const { a, dy } = sceneK(t, 33, 41);
+  if (a <= 0) return;
+  ctx.save(); ctx.translate(0, dy);
+  const k1 = ia(t, 33.3);
+  txt("Notícia de alto impacto?", 540, 800 + (1 - k1) * 34, { w: 600, s: 62, a: a * k1 });
+  const k2 = ia(t, 34.6);
+  txt("O AETHER pausa sozinho —", 540, 900 + (1 - k2) * 34, { fam: "Inter", s: 42, c: MUT, a: a * k2 });
+  txt("antes e depois do evento.", 540, 960 + (1 - k2) * 34, { fam: "Inter", s: 42, c: MUT, a: a * k2 });
+  const k3 = ia(t, 35.8);
+  if (k3 > 0) {
+    ctx.save();
+    ctx.globalAlpha = a * k3;
+    ctx.translate(0, (1 - k3) * 34);
+    const total = 880, gapT = 14, y0 = 1060, h = 160;
+    const u = (total - 2 * gapT) / 3.5, wOn = u, wOff = u * 1.5;
+    let x0 = 540 - total / 2;
+    const seg = (x, w, on, topLabel, label) => {
+      rr(x, y0, w, h, 22);
+      if (on) {
+        const gg = ctx.createLinearGradient(0, y0, 0, y0 + h);
+        gg.addColorStop(0, "rgba(124,92,255,0.32)"); gg.addColorStop(1, "rgba(124,92,255,0.08)");
+        ctx.fillStyle = gg; ctx.fill();
+        ctx.strokeStyle = "rgba(124,92,255,0.4)"; ctx.setLineDash([]); ctx.lineWidth = 2; ctx.stroke();
+      } else {
+        ctx.save(); ctx.clip();
+        ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = 18;
+        for (let d = -h; d < w + h; d += 36) {
+          ctx.beginPath(); ctx.moveTo(x + d, y0 + h + 10); ctx.lineTo(x + d + h + 20, y0 - 10); ctx.stroke();
+        }
+        ctx.restore();
+        rr(x, y0, w, h, 22);
+        ctx.strokeStyle = "rgba(255,255,255,0.28)"; ctx.setLineDash([16, 12]); ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
+      }
+      if (topLabel) txt(topLabel, x + w / 2, y0 + 34, { fam: "Inter", s: 24, c: DIM, a: a * k3, ls: "3px" });
+      txt(label, x + w / 2, y0 + h - 40, { fam: "Inter", w: 500, s: 30, c: "#cdc7e6", a: a * k3 });
+    };
+    seg(x0, wOn, true, null, "Sinais ativos"); x0 += wOn + gapT;
+    seg(x0, wOff, false, "PAYROLL · 15:30", "Pausa automática"); x0 += wOff + gapT;
+    seg(x0, wOn, true, null, "Retomada");
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function s6(t) {
+  const { a, dy } = sceneK(t, 41, 49);
+  if (a <= 0) return;
+  ctx.save(); ctx.translate(0, dy);
+  const rows = [
+    { at: 41.3, start: 41.5, from: 0, to: 9, label: "confluências verificadas em cada sinal", y: 640 },
+    { at: 43.0, start: 43.2, from: 0, to: 288, label: "candles M5 avaliados por dia, por par", y: 960 },
+    { at: 45.0, start: 45.2, from: 24, to: 0, label: "sinais durante notícias de alto impacto", y: 1280 },
+  ];
+  for (const r of rows) {
+    const k = ia(t, r.at);
+    if (k <= 0) continue;
+    const ck = smooth(clamp((t - r.start) / 1.3, 0, 1));
+    const val = Math.round(r.from + (r.to - r.from) * ck);
+    ctx.save();
+    ctx.globalAlpha = a * k;
+    ctx.translate(0, (1 - k) * 34);
+    font(700, 170); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const g = ctx.createLinearGradient(340, r.y - 90, 740, r.y + 90);
+    g.addColorStop(0, INK); g.addColorStop(1, V);
+    ctx.fillStyle = g;
+    ctx.fillText(String(val), 540, r.y);
+    ctx.restore();
+    txt(r.label, 540, r.y + 130 + (1 - k) * 34, { fam: "Inter", s: 38, c: MUT, a: a * k });
+  }
+  ctx.restore();
+}
+
+function s7(t) {
+  const { a, dy } = sceneK(t, 49, 99, true);
+  if (a <= 0) return;
+  ctx.save(); ctx.translate(0, dy);
+  const k1 = ia(t, 49.3);
+  ctx.save();
+  ctx.globalAlpha = a * k1;
+  font(700, 120); ctx.textBaseline = "middle"; ctx.letterSpacing = "12px";
+  const wl = ctx.measureText("AETHER").width, wd = ctx.measureText(".").width;
+  ctx.textAlign = "left";
+  ctx.fillStyle = INK; ctx.fillText("AETHER", 540 - (wl + wd) / 2, 700 + (1 - k1) * 34);
+  ctx.fillStyle = V; ctx.fillText(".", 540 - (wl + wd) / 2 + wl, 700 + (1 - k1) * 34);
+  ctx.restore();
+  const k2 = ia(t, 50.2);
+  txt("Menos ruído.", 540, 860 + (1 - k2) * 34, { w: 600, s: 62, a: a * k2 });
+  txt("Mais critério.", 540, 940 + (1 - k2) * 34, { w: 600, s: 62, a: a * k2 });
+  const k3 = ia(t, 51.4);
+  if (k3 > 0) {
+    const pulse = 1 + 0.05 * Math.sin(((t - 51.4) / 1.6) * Math.PI * 2);
+    ctx.save();
+    ctx.globalAlpha = a * k3;
+    ctx.translate(540, 1120 + (1 - k3) * 34); ctx.scale(pulse, pulse);
+    font(600, 46); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const wp = ctx.measureText("Link na bio").width + 168, hp = 114;
+    const g = ctx.createLinearGradient(-wp / 2, -hp / 2, wp / 2, hp / 2);
+    g.addColorStop(0, V); g.addColorStop(1, VD);
+    ctx.shadowColor = "rgba(124,92,255,0.7)"; ctx.shadowBlur = 60; ctx.shadowOffsetY = 18;
+    rr(-wp / 2, -hp / 2, wp, hp, hp / 2);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.fillStyle = "#fff"; ctx.fillText("Link na bio", 0, 2);
+    ctx.restore();
+  }
+  const k4 = ia(t, 52);
+  const disc = [
+    "Conteúdo informativo gerado por análise técnica automatizada.",
+    "Não é recomendação de investimento nem garantia de resultados.",
+    "Forex e Opções envolvem risco de perda. Opere com responsabilidade.",
+  ];
+  disc.forEach((l, i) => txt(l, 540, 1760 + i * 42 + (1 - k4) * 20, { fam: "Inter", s: 26, c: DIM, a: a * k4 }));
+  ctx.restore();
+}
+
+function drawFrame(t) {
+  bg(t);
+  s1(t); s2(t); s3(t); s4(t); s5(t); s6(t); s7(t);
+}
+
+/* ---------- codificação ---------- */
+async function main() {
+  try {
+    await Promise.all([
+      document.fonts.load('700 108px "Space Grotesk"'),
+      document.fonts.load('600 62px "Space Grotesk"'),
+      document.fonts.load('400 42px "Inter"'),
+      document.fonts.load('500 30px "Inter"'),
+      document.fonts.load('600 42px "Inter"'),
+    ]);
+    if (typeof VideoEncoder === "undefined") throw new Error("WebCodecs indisponível");
+
+    const muxer = new Mp4Muxer.Muxer({
+      target: new Mp4Muxer.ArrayBufferTarget(),
+      video: { codec: "avc", width: W, height: H },
+      fastStart: "in-memory",
+      firstTimestampBehavior: "offset",
+    });
+    const encoder = new VideoEncoder({
+      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      error: (e) => { window.__renderStatus = { state: "error", error: String(e) }; },
+    });
+    encoder.configure({
+      codec: "avc1.640028",
+      width: W, height: H,
+      bitrate: 8_000_000,
+      framerate: FPS,
+      avc: { format: "avc" },
+    });
+
+    const total = DUR * FPS;
+    for (let f = 0; f < total; f++) {
+      drawFrame(f / FPS);
+      const frame = new VideoFrame(cv, { timestamp: (f * 1e6) / FPS, duration: 1e6 / FPS });
+      encoder.encode(frame, { keyFrame: f % (FPS * 2) === 0 });
+      frame.close();
+      if (encoder.encodeQueueSize > 4) {
+        await new Promise((r) => encoder.addEventListener("dequeue", r, { once: true }));
+      }
+      if (f % 30 === 0) {
+        window.__renderStatus = { state: "encoding", frame: f, total };
+        log(`codificando ${f}/${total}`);
+      }
+    }
+    await encoder.flush();
+    muxer.finalize();
+    const buf = muxer.target.buffer;
+    window.__renderStatus = { state: "uploading", bytes: buf.byteLength };
+    log(`enviando ${(buf.byteLength / 1e6).toFixed(1)} MB…`);
+    const resp = await fetch("http://127.0.0.1:4174/aether-reel.mp4", { method: "PUT", body: buf });
+    if (!resp.ok) throw new Error("upload falhou: " + resp.status);
+    window.__renderStatus = { state: "done", bytes: buf.byteLength, total };
+    log("pronto! assets/aether-reel.mp4");
+  } catch (e) {
+    window.__renderStatus = { state: "error", error: String(e && e.stack || e) };
+    log("erro: " + e);
+  }
+}
+main();
+</script>
+</body>
+</html>
