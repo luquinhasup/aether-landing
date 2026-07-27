@@ -364,10 +364,12 @@ img, svg, canvas { display: block; }
 .tg__head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .tg__avatar {
   width: 38px; height: 38px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--violet), var(--violet-deep));
-  color: #fff; display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-weight: 700;
+  flex: none;
+  overflow: hidden;
+  background: #07070f;
+  display: flex; align-items: center; justify-content: center;
 }
+.tg__avatar img { width: 100%; height: 100%; display: block; }
 .tg__head b { font-family: var(--font-display); font-size: 15px; display: block; }
 .tg__head small { color: var(--ink-soft); font-size: 12px; }
 .tg__msg { background: #fff; border: 1px solid var(--line-light); border-radius: 14px; padding: 12px 14px; margin-top: 10px; position: relative; }
@@ -457,10 +459,13 @@ img, svg, canvas { display: block; }
 .bot__head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .bot__avatar {
   width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--violet), var(--violet-deep));
-  color: #fff; display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-weight: 700;
+  flex: none;
+  overflow: hidden;
+  background: #07070f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex; align-items: center; justify-content: center;
 }
+.bot__avatar img { width: 100%; height: 100%; display: block; }
 .bot__head b { font-family: var(--font-display); font-size: 15px; display: block; color: #f2f0fa; }
 .bot__head small { color: #8d88a6; font-size: 12px; }
 .bot__panel {

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -7.5 200 200" role="img" aria-label="AETHER">
+  <defs>
+    <linearGradient id="amA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c58bf7"/>
+      <stop offset="0.42" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#1b2f9e"/>
+    </linearGradient>
+    <linearGradient id="amArc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1e3fd4"/>
+      <stop offset="0.34" stop-color="#5aa8ff"/>
+      <stop offset="0.5" stop-color="#dff4ff"/>
+      <stop offset="0.68" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#6d3cf0"/>
+    </linearGradient>
+    <radialGradient id="amCore" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.35" stop-color="#bfe9ff"/>
+      <stop offset="1" stop-color="#4fb4ff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="amGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="amSoft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.6"/>
+    </filter>
+  </defs>
+
+  <!-- pico "A" -->
+  <path d="M100 28 L167 157 L137 157 L100 79 L63 157 L33 157 Z" fill="url(#amA)"/>
+  <!-- facetas internas, dão o vinco do original -->
+  <path d="M100 28 L137 157 L100 79 Z" fill="#0a0a1c" opacity="0.22"/>
+  <path d="M100 79 L63 157 L33 157 Z" fill="#ffffff" opacity="0.05"/>
+
+  <!-- arco -->
+  <path d="M17 143 Q100 101 183 143 Q100 119 17 143 Z" fill="url(#amArc)" filter="url(#amGlow)"/>
+
+  <!-- brilho central -->
+  <circle cx="100" cy="119" r="17" fill="url(#amCore)" opacity="0.7" filter="url(#amSoft)"/>
+  <path d="M100 85 L102.4 115.5 L123 119 L102.4 122.5 L100 153 L97.6 122.5 L77 119 L97.6 115.5 Z"
+        fill="#ffffff" filter="url(#amGlow)"/>
+</svg>
